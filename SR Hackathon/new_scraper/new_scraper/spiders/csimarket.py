@@ -13,9 +13,10 @@ class CsimarketSpider(scrapy.Spider):
     def start_requests(self):
         base_url = 'https://csimarket.com/stocks/at_glance.php?code='
         base_url2 = 'https://csimarket.com/stocks/income.php?code='
+        base_url3 = 'https://csimarket.com/stocks/balance.php?code='
         company_dict = {"Apple Inc":"AAPL", "Kellogg Company":"K", "Visa Inc":"V", "Wells Fargo and Company":"WFC", "Bank Of America Corporation":"BAC", "United Airlines Holdings Inc":"UAL", "Ford Motor Co":"F", "Exxon Mobil Corporation":"XOM", "Chevron Corp":"CVX", "Johnson and Johnson":"JNJ", "Amazon Com Inc":"AMZN", "Abbvie inc":"ABBV", "Biogen Inc":"BIIB", "Fedex Corporation":"FDX", "Hershey Co":"HSY", "Tesla Inc":"TSLA"}
 
-        headers = ["Market Capitalization", "Shares Outstanding", "Number of Employees", "Revenues", "Net Income", "Cash Flow", "Capital Exp.", "Name of Company", "Location", "Sector", "Sub-Sector", "Operating Expenses", "Ticker Symbol", "Common Stock Value", "30 Day Performance"]
+        headers = ["Market Capitalization", "Shares Outstanding", "Number of Employees", "Revenues", "Net Income", "Cash Flow", "Capital Exp.", "Name of Company", "Location", "Sector", "Sub-Sector", "30 Day Performance", "52 Week Average", "Operating Expenses", "Ticker Symbol", "Common Stock Value"]
         
         save_path = 'C:/Users/training/Documents/SR Hackathon/new_scraper/new_scraper/spiders/'
 
@@ -28,22 +29,29 @@ class CsimarketSpider(scrapy.Spider):
         #     writer.writeheader()
 
         with open(os.path.join(save_path, 'extract'+".csv"), 'a') as out_file_csv: 
-            i = 1
+            # i = 1
             for line in headers:
-                out_file_csv.write(line)
-                if i < len(headers)-1:
-                    out_file_csv.write(',')
-                i += 1
+                try:
+                    out_file_csv.write(line)
+                except:
+                    out_file_csv.write('')
+                out_file_csv.write(',')
+                # if i < len(headers)-1:
+                #     out_file_csv.write(',')
+                # i += 1
+            out_file_csv.write('')
             out_file_csv.write('\n')
 
         for name, company in company_dict.items():
             url = base_url+str(company)
             url2 = base_url2+str(company)
-            yield scrapy.Request(url=url, callback=self.parse_company, meta={'name':name, 'headers':headers, 'url2':url2, 'company':company})
+            url3 = base_url3+str(company)
+            yield scrapy.Request(url=url, callback=self.parse_company, meta={'name':name, 'headers':headers, 'url2':url2, 'url3':url3, 'company':company})
 
 
     def parse_company(self, response):
         url2 = response.meta['url2']
+        url3 = response.meta['url3']
         company = response.meta['company']
         loc_map = {"CA":"California", "MI":"Michigan", "NC":"North Carolina", "IL":"Illinois", "TX":"Texas", "NJ":"New Jersey", "WA":"Washington", "MA":"Massachusetts", "TN":"Tennessee", "PA":"Pennsylvania"}
 
@@ -69,19 +77,40 @@ class CsimarketSpider(scrapy.Spider):
 
                     i += 1
                 if "Market Capitalization" in text1:
-                    data["Market Capitalization"] = text2
+                    try:
+                        data["Market Capitalization"] = text2
+                    except:
+                        data["Market Capitalization"] = ''
                 elif "Shares Outstanding" in text1:
-                    data["Shares Outstanding"] = text2
+                    try:
+                        data["Shares Outstanding"] = text2
+                    except:
+                        data["Shares Outstanding"] = ''
                 elif "Number of Employees" in text1:
-                    data["Number of Employees"] = text2
+                    try:
+                        data["Number of Employees"] = text2
+                    except:
+                        data["Number of Employees"] = ''
                 elif "Revenues" in text1:
-                    data["Revenues"] = text2
+                    try:
+                        data["Revenues"] = text2
+                    except:
+                        data["Revenues"] = ''
                 elif "Net Income" in text1:
-                    data["Net Income"] = text2
+                    try:
+                        data["Net Income"] = text2
+                    except:
+                        data["Net Income"] = ''
                 elif "Cash Flow" in text1:
-                    data["Cash Flow"] = text2
+                    try:
+                        data["Cash Flow"] = text2
+                    except:
+                        data["Cash Flow"] = ''
                 elif "Capital Exp." in text1:
-                    data["Capital Exp."] = text2
+                    try:
+                        data["Capital Exp."] = text2
+                    except:
+                        data["Capital Exp."] = ''
 
         data["Name of Company"] = response.meta['name']
 
@@ -100,10 +129,16 @@ class CsimarketSpider(scrapy.Spider):
             j = 1
             for lk in td.xpath('a'):
                 if j == 1:
-                    data["Sector"] = lk.xpath('./text()').extract()[-1].lstrip().rstrip()
+                    try:
+                        data["Sector"] = lk.xpath('./text()').extract()[-1].lstrip().rstrip()
+                    except:
+                        data["Sector"] = ''
                 else:
                     if j == 2:
-                        data["Sub-Sector"] = lk.xpath('./text()').extract()[-1].lstrip().rstrip()
+                        try:
+                            data["Sub-Sector"] = lk.xpath('./text()').extract()[-1].lstrip().rstrip()
+                        except:
+                            data["Sub-Sector"] = ''
                 j += 1
 
             # print(text(td.xpath('span')))
@@ -113,13 +148,63 @@ class CsimarketSpider(scrapy.Spider):
 
             if i == 1:
                 break
-        print(response.xpath('//td[contains(.,"Perf:")]/following-sibling::td//text()').get(), 'ojioipo')
+        
+        try:
+            data['30 Day Performance'] = response.xpath('//td[@class="svjetlirub s"]/span//text()').get().lstrip().rstrip()
+        except:
+            data['30 Day Performance'] = ''
 
-        yield scrapy.Request(url=url2, callback=self.parse_company2, meta={'headers':headers, 'data':data, 'url2':url2, 'company':company})
+        try:
+            data['52 Week Average'] = response.xpath('//td[contains(.,"Avg:")]/following-sibling::td//text()').get().lstrip().rstrip()
+        except:
+            data['52 Week Average'] = ''
+
+
+        yield scrapy.Request(url=url2, callback=self.parse_company2, meta={'headers':headers, 'data':data, 'url2':url2, 'url3':url3, 'company':company})
 
 
 
     def parse_company2(self, response):
+
+        loc_map = {"CA":"California", "MI":"Michigan", "NC":"North Carolina", "IL":"Illinois", "TX":"Texas", "NJ":"New Jersey", "WA":"Washington", "MA":"Massachusetts", "TN":"Tennessee", "PA":"Pennsylvania"}
+
+        def text(elt):
+            return elt.xpath('./text()')
+            
+        url2 = response.meta['url2']
+        url3 = response.meta['url3']
+        headers = response.meta['headers']
+        data = response.meta['data']
+        company = response.meta['company']
+
+        save_path = 'C:/Users/training/Documents/SR Hackathon/new_scraper/new_scraper/spiders/'
+
+    
+        # g = response.xpath('//td[text()="Total costs &amp; expenses "]/following::td[1]/span/text()')
+        try:
+            data['Operating Expenses'] = response.xpath('//td[@class="svjetlirub capital f11"]/following-sibling::td[1]//text()').get()
+        except:
+            data['Operating Expenses'] = ''
+        try:
+            data['Ticker Symbol'] = company
+        except:
+            data['Ticker Symbol'] = ''
+        # print(response.xpath('//td[@class="svjetlirub"]/following-sibling::td[1]//text()').get())
+        # try:
+        #     data['Common Stock Value'] = response.xpath('//td[@class="svjetlirub"]/following-sibling::td[1]//text()').get()
+        # except:
+        #     data['Common Stock Value'] = ''
+        # data['30 Day Performance'] = response.xpath('//td[text()="30 Day Perf:"]/following-sibling::td//text()').get()
+        # print(response.xpath('//td[@class="svjetlirub al s"]'))
+        # text()="30&nbsp;Day&nbsp;Perf:"
+        print(data)
+
+        yield scrapy.Request(url=url3, callback=self.parse_company3, meta={'headers':headers, 'data':data, 'url2':url2, 'url3':url3, 'company':company})
+
+
+
+
+    def parse_company3(self, response):
 
         loc_map = {"CA":"California", "MI":"Michigan", "NC":"North Carolina", "IL":"Illinois", "TX":"Texas", "NJ":"New Jersey", "WA":"Washington", "MA":"Massachusetts", "TN":"Tennessee", "PA":"Pennsylvania"}
 
@@ -136,16 +221,20 @@ class CsimarketSpider(scrapy.Spider):
 
     
         # g = response.xpath('//td[text()="Total costs &amp; expenses "]/following::td[1]/span/text()')
-        data['Operating Expenses'] = response.xpath('//td[@class="svjetlirub capital f11"]/following-sibling::td[1]//text()').get()
-        data['Ticker Symbol'] = company
+        # data['Operating Expenses'] = response.xpath('//td[@class="svjetlirub capital f11"]/following-sibling::td[1]//text()').get()
+        # data['Ticker Symbol'] = company
         # print(response.xpath('//td[@class="svjetlirub"]/following-sibling::td[1]//text()').get())
-        data['Common Stock Value'] = response.xpath('//td[@class="svjetlirub"]/following-sibling::td[1]//text()').get()
+        # data['Common Stock Value'] = response.xpath('//td[@class="svjetlirub"]/following-sibling::td[1]//text()').get()
+        try:
+            data['Common Stock Value'] = response.xpath('//td[text()="  Common Stock Value"]/following-sibling::td[1]//text()').get()
+        except:
+            data['Common Stock Value'] = ''
         # data['30 Day Performance'] = response.xpath('//td[text()="30 Day Perf:"]/following-sibling::td//text()').get()
         # print(response.xpath('//td[@class="svjetlirub al s"]'))
         # text()="30&nbsp;Day&nbsp;Perf:"
-        print(company)
+        # print(company)
         print(data)
-        print(data['Common Stock Value'])
+        # print(data['Common Stock Value'])
         # print(data['30 Day Performance'])
         # g = response.xpath('//td[preceding::td[1]/text()="Total costs &amp; expenses "]')
             # m = 1
@@ -169,12 +258,17 @@ class CsimarketSpider(scrapy.Spider):
         #     out_json = json.dumps(grand)
         #     out_file_json.write(out_json+"\n")
         with open(os.path.join(save_path, 'extract'+".csv"), 'a') as out_file_csv:
-            i = 1
+            # i = 1
             for line in list(data.values()):
-                out_file_csv.write(line)
-                if i < len(headers)-1:
-                    out_file_csv.write(',')
-                i += 1
+                try:
+                    out_file_csv.write(line)
+                except:
+                    out_file_csv.write('')
+                out_file_csv.write(',')
+                # if i < len(headers)-1:
+                #     out_file_csv.write(',')
+                # i += 1
+            out_file_csv.write('')
             out_file_csv.write('\n')
 
 
