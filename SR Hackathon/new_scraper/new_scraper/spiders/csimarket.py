@@ -28,19 +28,22 @@ class CsimarketSpider(scrapy.Spider):
         #     # writing headers (field names) 
         #     writer.writeheader()
 
-        with open(os.path.join(save_path, 'extract'+".csv"), 'a') as out_file_csv: 
-            # i = 1
-            for line in headers:
-                try:
-                    out_file_csv.write(line)
-                except:
-                    out_file_csv.write('')
-                out_file_csv.write(',')
-                # if i < len(headers)-1:
-                #     out_file_csv.write(',')
-                # i += 1
-            out_file_csv.write('')
-            out_file_csv.write('\n')
+        # with open(os.path.join(save_path, 'extract'+".csv"), 'a') as out_file_csv: 
+        #     # i = 1
+        #     for line in headers:
+        #         try:
+        #             out_file_csv.write(line)
+        #         except:
+        #             out_file_csv.write('')
+        #         out_file_csv.write(',')
+        #         # if i < len(headers)-1:
+        #         #     out_file_csv.write(',')
+        #         # i += 1
+        #     out_file_csv.write('')
+        #     out_file_csv.write('\n')
+        with open(os.path.join(save_path, 'extract'+".csv"), 'a', newline='') as out_file_csv:
+            writer = csv.writer(out_file_csv)
+            writer.writerow(headers)
 
         for name, company in company_dict.items():
             url = base_url+str(company)
@@ -74,41 +77,43 @@ class CsimarketSpider(scrapy.Spider):
                     else:
                         if i == 2:
                             text2 = text(td).replace("\n", "").lstrip().rstrip()
+                        
+
 
                     i += 1
                 if "Market Capitalization" in text1:
                     try:
-                        data["Market Capitalization"] = text2
+                        data["Market Capitalization"] = text2.replace(",", "")
                     except:
                         data["Market Capitalization"] = ''
-                elif "Shares Outstanding" in text1:
+                elif "Shares" in text1 and "Outstanding" in text1:
                     try:
-                        data["Shares Outstanding"] = text2
+                        data["Shares Outstanding"] = text2.replace(",", "")
                     except:
                         data["Shares Outstanding"] = ''
-                elif "Number of Employees" in text1:
+                elif "Employees" in text1:
                     try:
-                        data["Number of Employees"] = text2
+                        data["Number of Employees"] = text2.replace(",", "")
                     except:
                         data["Number of Employees"] = ''
                 elif "Revenues" in text1:
                     try:
-                        data["Revenues"] = text2
+                        data["Revenues"] = response.xpath('//td[@class="al ecol"]/following-sibling::td[1]//text()').get().replace("\n", "").lstrip().rstrip().replace(",", "")
                     except:
                         data["Revenues"] = ''
                 elif "Net Income" in text1:
                     try:
-                        data["Net Income"] = text2
+                        data["Net Income"] = response.xpath('//td[contains(text(),"Net Income")]/following-sibling::td//text()').get().lstrip().rstrip().replace(",", "")
                     except:
                         data["Net Income"] = ''
                 elif "Cash Flow" in text1:
                     try:
-                        data["Cash Flow"] = text2
+                        data["Cash Flow"] = response.xpath('//td[contains(text(),"Cash Flow")]/following-sibling::td//text()').get().lstrip().rstrip().replace(",", "")
                     except:
                         data["Cash Flow"] = ''
                 elif "Capital Exp." in text1:
                     try:
-                        data["Capital Exp."] = text2
+                        data["Capital Exp."] = text2.replace(",", "")
                     except:
                         data["Capital Exp."] = ''
 
@@ -150,12 +155,12 @@ class CsimarketSpider(scrapy.Spider):
                 break
         
         try:
-            data['30 Day Performance'] = response.xpath('//td[@class="svjetlirub s"]/span//text()').get().lstrip().rstrip()
+            data['30 Day Performance'] = str(float(response.xpath('//td[@class="svjetlirub s"]/span//text()').get().lstrip().rstrip().replace("%", "").replace(" ", ""))/100)
         except:
             data['30 Day Performance'] = ''
 
         try:
-            data['52 Week Average'] = response.xpath('//td[contains(.,"Avg:")]/following-sibling::td//text()').get().lstrip().rstrip()
+            data['52 Week Average'] = response.xpath('//td[contains(.,"Avg:")]/following-sibling::td//text()').get().lstrip().rstrip().replace("$", "").replace(" ", "")
         except:
             data['52 Week Average'] = ''
 
@@ -182,7 +187,11 @@ class CsimarketSpider(scrapy.Spider):
     
         # g = response.xpath('//td[text()="Total costs &amp; expenses "]/following::td[1]/span/text()')
         try:
-            data['Operating Expenses'] = response.xpath('//td[@class="svjetlirub capital f11"]/following-sibling::td[1]//text()').get()
+            oper_exp = response.xpath('//td[@class="svjetlirub capital f11"]/following-sibling::td[1]//text()').get().replace(",", "")
+            if oper_exp != None:
+                data['Operating Expenses'] = oper_exp
+            else:
+                data['Operating Expenses'] = ""
         except:
             data['Operating Expenses'] = ''
         try:
@@ -226,7 +235,12 @@ class CsimarketSpider(scrapy.Spider):
         # print(response.xpath('//td[@class="svjetlirub"]/following-sibling::td[1]//text()').get())
         # data['Common Stock Value'] = response.xpath('//td[@class="svjetlirub"]/following-sibling::td[1]//text()').get()
         try:
-            data['Common Stock Value'] = response.xpath('//td[text()="  Common Stock Value"]/following-sibling::td[1]//text()').get()
+            common_sv = response.xpath('//td[text()="  Common Stock Value"]/following-sibling::td[1]//text()').get().replace(",", "")
+            print(str(common_sv), "This is it")
+            if common_sv != None:
+                data['Common Stock Value'] = common_sv
+            else:
+                data['Common Stock Value'] = ""
         except:
             data['Common Stock Value'] = ''
         # data['30 Day Performance'] = response.xpath('//td[text()="30 Day Perf:"]/following-sibling::td//text()').get()
@@ -257,20 +271,22 @@ class CsimarketSpider(scrapy.Spider):
         # with open(os.path.join(save_path, 'extract2'+".json"), 'a') as out_file_json:
         #     out_json = json.dumps(grand)
         #     out_file_json.write(out_json+"\n")
-        with open(os.path.join(save_path, 'extract'+".csv"), 'a') as out_file_csv:
-            # i = 1
-            for line in list(data.values()):
-                try:
-                    out_file_csv.write(line)
-                except:
-                    out_file_csv.write('')
-                out_file_csv.write(',')
-                # if i < len(headers)-1:
-                #     out_file_csv.write(',')
-                # i += 1
-            out_file_csv.write('')
-            out_file_csv.write('\n')
-
+        # with open(os.path.join(save_path, 'extract'+".csv"), 'a') as out_file_csv:
+        #     # i = 1
+        #     for line in list(data.values()):
+        #         try:
+        #             out_file_csv.write(line)
+        #         except:
+        #             out_file_csv.write('')
+        #         out_file_csv.write(',')
+        #         # if i < len(headers)-1:
+        #         #     out_file_csv.write(',')
+        #         # i += 1
+        #     out_file_csv.write('')
+        #     out_file_csv.write('\n')
+        with open(os.path.join(save_path, 'extract'+".csv"), 'a', newline='') as out_file_csv:
+            writer = csv.writer(out_file_csv)
+            writer.writerow(list(data.values()))
 
         # with open(os.path.join(save_path, 'extract'+".csv"), 'a') as out_file_csv:
         #     # creating a csv dict writer object 
