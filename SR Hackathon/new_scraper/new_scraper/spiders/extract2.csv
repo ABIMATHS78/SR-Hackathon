@@ -1,0 +1,17 @@
+Name of Company,Shares Outstanding,Revenues,Net Income,Operating expenses,Founded,Industry,Sector,Number of Employees,CEO,Ticker Symbol,ISIN,Capital expenditure,Market Capitization,Long term Debt,Common Stock Value
+Chevron Corp,"1,867","94,692","-5,543","26,138",1879,Oil & Gas Integrated,Energy,"47,736",,CVX,US1667641005,"-5,954","157,695","42,767","-23,077"
+Exxon Mobil Corporation,"4,228","181,502","-22,440","89,098",1870,Oil & Gas Integrated,Energy,"72,000",Darren Woods,XOM,US30231G1022,"-17,282","174,288","47,182","-210,088"
+Visa Inc,"1,953","21,846","10,866","3,980",1958,Credit Services,Financial Services,"20,500",Alfred Kelly,V,US92826C8394,-736,"388,418","21,071","21,768"
+Johnson and Johnson,"2,633","82,584","14,714","34,671",1886,Drug Manufacturers-General,Healthcare,"134,500",Alex Gorsky,JNJ,US4781601046,"-3,347","414,310","32,635","-35,370"
+Kellogg Company,344,"13,770","1,251","2,966",1906,Packaged Foods,Consumer Defensive,"31,000",John Bryant,K,US4878361082,-505,"21,389","7,266","-3,482"
+Ford Motor Co,"3,973","127,144","-1,279","10,193",1903,Auto Manufacturers,Consumer Cyclical,"186,000",James Hackett,F,US3453708600,"-5,742","34,970","110,341","20,741"
+Amazon Com Inc,500,"386,064","21,331","129,858",1994,Internet Retail,Consumer Cyclical,"1,298,000",Jeffrey Bezos,AMZN,US0231351067,"-35,044","1,634,168","84,389","41,033"
+Bank Of America Corporation,"8,753","85,528","17,894","55,213",1784,Banks-Diversified,Financial Services,"212,201",Brian Moynihan,BAC,US0605051046,-,"262,205",,"110,492"
+Apple Inc,"17,352","274,515","57,411","38,668",1977,Consumer Electronics,Technology,"147,000",Timothy Cook,AAPL,US0378331005,"-7,309","1,920,273","98,667","50,779"
+Wells Fargo and Company,"4,118","72,340","3,301","57,630",1852,Banks-Diversified,Financial Services,"264,513",Charles Scharf,WFC,US9497461015,,"124,779",,"21,803"
+Abbvie inc,"1,667","45,804","4,616","19,054",,Drug Manufacturers-General,Healthcare,"47,000",Richard Gonzalez,ABBV,US00287Y1091,-798,"189,171","77,554","15,138"
+Hershey Co,208,"8,150","1,279","1,919",1894,Confectioners,Consumer Defensive,"15,200",,HSY,US4278661081,-441,"31,707","4,090",644
+Tesla Inc,933,"31,536",721,"4,636",2003,Auto Manufacturers,Consumer Cyclical,"70,757",Elon Musk,TSLA,US88160R1014,"-3,232","668,905","9,607","27,261"
+Fedex Corporation,261,"69,217","1,286","39,573",1971,Integrated Freight & Logistics,Industrials,"324,000",Frederick Smith,FDX,US31428X1063,"-5,868","34,109","34,147","-5,774"
+United Airlines Holdings Inc,291,"15,355","-7,069","13,339",1934,Airlines,Industrials,"84,100",Jeffery Smisek,UAL,US9100471096,"-1,727","12,585","31,186","4,473"
+Biogen Inc,161,"13,445","4,001","7,089",1978,Drug Manufacturers-General,Healthcare,"9,100",Josephine Price,BIIB,US09062X1037,-477,"37,679","7,828","-2,977"
