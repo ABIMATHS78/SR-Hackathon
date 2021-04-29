@@ -16,6 +16,7 @@ class StockanalysisSpider(scrapy.Spider):
 
         # headers = ["Market Capitalization", "Shares Outstanding", "Number of Employees", "Revenues", "Net Income", "Cash Flow", "Capital Exp.", "Name of Company", "Location", "Sector", "Sub-Sector", "30 Day Performance", "52 Week Average", "Operating Expenses", "Ticker Symbol", "Common Stock Value"]
         headers = ['Name of Company', 'Shares Outstanding', 'Revenues', 'Net Income', 'Operating expenses', 'Founded', 'Industry', 'Sector', 'Number of Employees', 'CEO', 'Ticker Symbol', 'ISIN', 'Capital expenditure', 'Market Capitization', 'Long term Debt', 'Common Stock Value']
+        headers2 = ['Name of Company', 'Name of Executive', 'Position']
         save_path = 'C:/Users/training/Documents/SR Hackathon/new_scraper/new_scraper/spiders/'
 
         if not os.path.exists(save_path):
@@ -24,6 +25,10 @@ class StockanalysisSpider(scrapy.Spider):
         with open(os.path.join(save_path, 'extract2'+".csv"), 'a', newline='') as out_file_csv:
             writer = csv.writer(out_file_csv)
             writer.writerow(headers)
+        
+        with open(os.path.join(save_path, 'extract_executives'+".csv"), 'a', newline='') as out_file_csv:
+            writer = csv.writer(out_file_csv)
+            writer.writerow(headers2)
 
         for name, company in company_dict.items():
             url = base_url+str(company)+"/financials"
@@ -48,7 +53,7 @@ class StockanalysisSpider(scrapy.Spider):
 
         data ={}
 
-        
+        name = response.meta['name']
         data["Name of Company"] = response.meta['name']
 
         headers = response.meta['headers']
@@ -98,7 +103,7 @@ class StockanalysisSpider(scrapy.Spider):
 
 
         
-        yield scrapy.Request(url=url2, callback=self.parse_company2, meta={'headers':headers, 'data':data, 'url2':url2, 'url3':url3, 'url4':url4, 'url5':url5, 'company':company})
+        yield scrapy.Request(url=url2, callback=self.parse_company2, meta={'name':name, 'headers':headers, 'data':data, 'url2':url2, 'url3':url3, 'url4':url4, 'url5':url5, 'company':company})
 
 
 
@@ -107,7 +112,7 @@ class StockanalysisSpider(scrapy.Spider):
         loc_map = {"CA":"California", "MI":"Michigan", "NC":"North Carolina", "IL":"Illinois", "TX":"Texas", "NJ":"New Jersey", "WA":"Washington", "MA":"Massachusetts", "TN":"Tennessee", "PA":"Pennsylvania"}
 
         def text(elt):
-            return elt.xpath('./text()')
+            return elt.xpath('./text()').extract_first(default='')
             
         url2 = response.meta['url2']
         url3 = response.meta['url3']
@@ -118,10 +123,11 @@ class StockanalysisSpider(scrapy.Spider):
         headers = response.meta['headers']
         data = response.meta['data']
         company = response.meta['company']
+        name = response.meta['name']
 
         save_path = 'C:/Users/training/Documents/SR Hackathon/new_scraper/new_scraper/spiders/'
         
-
+        data2 ={}
         try:
             founded = response.xpath('//td[text()="Founded"]/following::td[1]//text()').get()
             if founded != None:
@@ -187,7 +193,38 @@ class StockanalysisSpider(scrapy.Spider):
         except:
             data['ISIN'] = ''
         
-        # for table in response.xpath('//table'):
+
+        for table in response.xpath('//table'):
+            header = [text(th) for th in table.xpath('.//th')]
+            
+            p1 = None
+            p2 = None
+            for hd in header:
+                if "name" in hd.lower():
+                    p1 = True
+                if "position" in hd.lower():
+                    p2 = True
+            if p1 == True and p2 == True:
+                print(header)
+                master_list = []
+                for tr in table.xpath('.//tr'):
+                    i = 1
+                    hold_list = [name]
+                    for td in tr.xpath('td'):
+                        hold_list += [text(td)]
+                        i += 1
+                        if i%2==1 and i > 2:
+                            master_list += [hold_list]
+                            i = 1
+                            try:
+                                data2["Name of Company"] = hold_list[0]
+                                data2[hold_list[2]] = hold_list[1]
+                            except:
+                                pass
+                            hold_list = [name]
+
+        print(master_list)
+        print(data2)
         #     if "Name" in table.xpath('//tr').xpath('//td').xpath('.//text()'):
         #         print(table.xpath('//tr').xpath('//td').xpath('.//text()'))
         #     # if "Position" in table and "Name" in table:
@@ -195,11 +232,11 @@ class StockanalysisSpider(scrapy.Spider):
 
 
 
-        yield scrapy.Request(url=url3, callback=self.parse_company3, meta={'headers':headers, 'data':data, 'url2':url2, 'url3':url3, 'url4':url4, 'url5':url5, 'company':company})
+        yield scrapy.Request(url=url3, callback=self.parse_company3, meta={'headers':headers, 'data':data, 'url2':url2, 'url3':url3, 'url4':url4, 'url5':url5, 'company':company, 'master_list':master_list})
 
 
     def parse_company3(self, response):
-
+        master_list = response.meta['master_list']
         headers = response.meta['headers']
         data = response.meta['data']
         company = response.meta['company']
@@ -232,12 +269,12 @@ class StockanalysisSpider(scrapy.Spider):
             data['Capital expenditure'] = ''
 
         
-        yield scrapy.Request(url=url4, callback=self.parse_company4, meta={'headers':headers, 'data':data, 'url2':url2, 'url3':url3, 'url4':url4, 'url5':url5, 'company':company})
+        yield scrapy.Request(url=url4, callback=self.parse_company4, meta={'headers':headers, 'data':data, 'url2':url2, 'url3':url3, 'url4':url4, 'url5':url5, 'company':company, 'master_list':master_list})
 
 
 
     def parse_company4(self, response):
-
+        master_list = response.meta['master_list']
         headers = response.meta['headers']
         data = response.meta['data']
         company = response.meta['company']
@@ -270,11 +307,11 @@ class StockanalysisSpider(scrapy.Spider):
             data['Market Capitization'] = ''
 
         
-        yield scrapy.Request(url=url5, callback=self.parse_company5, meta={'headers':headers, 'data':data, 'url2':url2, 'url3':url3, 'url4':url4, 'url5':url5, 'company':company})
+        yield scrapy.Request(url=url5, callback=self.parse_company5, meta={'headers':headers, 'data':data, 'url2':url2, 'url3':url3, 'url4':url4, 'url5':url5, 'company':company, 'master_list':master_list})
 
 
     def parse_company5(self, response):
-
+        master_list = response.meta['master_list']
         headers = response.meta['headers']
         data = response.meta['data']
         company = response.meta['company']
@@ -336,6 +373,13 @@ class StockanalysisSpider(scrapy.Spider):
         with open(os.path.join(save_path, 'extract2'+".csv"), 'a', newline='') as out_file_csv:
             writer = csv.writer(out_file_csv)
             writer.writerow(list(data.values()))
+
+        with open(os.path.join(save_path, 'extract_executives'+".csv"), 'a', newline='') as out_file_csv:
+            print("Yuppppppppppppppppppppppppp")
+            for pts in master_list:
+                print(pts)
+                writer = csv.writer(out_file_csv)
+                writer.writerow(pts)
 
 
 
